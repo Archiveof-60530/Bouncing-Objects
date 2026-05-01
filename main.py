@@ -1,16 +1,16 @@
 from turtle import *
 import random
 
-# generates a random color
+
 def generate_color():
     return f"#{random.randint(0, 0xFFFFFF):06x}"
 
-# Creates the rectangular game boundary
+
 def playing_area():
     t = Turtle()
     t.speed(0)
     t.hideturtle()
-    t.color("khaki")
+    t.color(generate_color())
     t.penup()
     t.goto(240,240)
     t.pendown()
@@ -20,35 +20,28 @@ def playing_area():
         t.forward(480)
     t.end_fill()
 
-
-# Function 1: Movement using turtle heading (forward + setheading)
-def move_with_heading(t):
-    # Move the turtle continuously using forward movement and its current heading.
-    # The turtle should update its position each frame using forward().
-    # When the turtle hits a boundary:
-    #   - Use heading() to check its current direction.
-    #   - Calculate the reflection angle based on the wall it hits.
-    #   - Use setheading() to update the direction so it "bounces" off the wall.
-    # The result should be smooth motion where direction is controlled by angles.
-    t.forward(5)
-
-    if t.xcor() > 240 or t.xcor() < -240:
-        t.setheading(180 - t.heading())
+def move_with_heading(t,turtles):
+    t.forward(10)
+    if t.xcor() > 240 or t.xcor()< -240:
+        t.setheading(180-t.heading())
         t.forward(10)
+        turtles.append(create_turtle())
+
     if t.ycor() > 240 or t.ycor() < -240:
         t.setheading(-t.heading())
+        t.forward(10)
+        turtles.append(create_turtle())
+    return turtles
 
+def create_turtle ():
+    tur = Turtle()
+    tur.speed(0)
+    tur.color(generate_color())
+    tur.shape("circle")
+    tur.setheading(random.randint(0,360))
+    return tur
 
-# Function 2: Movement using delta x / delta y (coordinate-based movement)
 def move_with_deltas(t, deltax, deltay):
-    # Move the turtle by directly updating its x and y position using dx and dy values.
-    # Each update step:
-    #   - Add deltax to x-coordinate and deltay to y-coordinate.
-    # When the turtle hits a boundary:
-    #   - Reverse deltax if it hits a left/right wall.
-    #   - Reverse deltay if it hits a top/bottom wall.
-    # This creates a bounce effect using vector-style movement instead of angles.
-    # The turtle’s position should be updated using setx() and sety().
     newx = t.xcor() + deltax
     newy = t.ycor() + deltay
     if newx > 240 or newx < -240:
@@ -57,32 +50,83 @@ def move_with_deltas(t, deltax, deltay):
     if newy > 240 or newy < -240:
         newy = t.ycor()
         deltay *= -1
-
     t.goto(newx,newy)
-
     return deltax, deltay
+
+
+
+def create_player():
+    global player
+    player = Turtle()
+    player.speed(0)
+    player.color("white")
+    player.shape("turtle")
+
+def up():
+    global player
+    player.setheading(90)
+    player.sety(player.ycor()+10)
+
+def down():
+    global player
+    player.setheading(-90)
+    player.sety(player.ycor()-10)
+
+def right():
+    global player
+    player.right(10)
+    # player.setheading(0)
+    # player.setx(player.xcor()+10)
+
+def left():
+    global player
+    player.left(10)
+    # player.setheading(180)
+    # player.setx(player.xcor()-10)
+
 
 screen = Screen()
 screen.title("Bouncing-objects")
 screen.bgcolor("black")
 screen.setup(520,520)
+screen.listen()
+screen.onkey(create_player,'space')
+screen.onkeypress(up, "Up")
+screen.onkeypress(down, "Down") 
+screen.onkeypress(right, "Right")
+screen.onkeypress(left, "Left")               
+
 
 playing_area()
 
+player = None
 
 tur = Turtle()
 tur.speed(0)
 tur.color(generate_color())
 tur.shape("circle")
 tur.setheading(random.randint(0,360))
-deltax = random.randint(-1,1) 
-deltay = random.randint(-10,10) 
+
+turtles = [tur]
+
+
+
+
 
 
 
 
 while True :
-    deltax, deltay = move_with_deltas(tur, deltax, deltay)
+    if player != None:
+        move_with_heading(player, turtles)
+    for obj in turtles:
+        turtles = move_with_heading(obj,turtles)
+        if player != None and player.distance(obj) < 20:
+            obj.hideturtle()
+            turtles.remove(obj)
+
+
+
 
 
 screen.exitonclick()
